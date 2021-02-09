@@ -77,11 +77,23 @@ func (o CreateArgoCDOpts) Validate() error {
 	)
 }
 
+type CreateKubePrometheusStackOpts struct {
+	ID ID
+}
+
+// Validate the helm create inputs
+func (o CreateKubePrometheusStackOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+	)
+}
+
 // HelmService defines the service layer interface
 type HelmService interface {
 	CreateExternalSecretsHelmChart(ctx context.Context, opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
 	CreateAlbIngressControllerHelmChart(ctx context.Context, opts CreateAlbIngressControllerHelmChartOpts) (*Helm, error)
 	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*Helm, error)
+	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
 }
 
 // HelmRun defines the runner layer
@@ -89,6 +101,7 @@ type HelmRun interface {
 	CreateExternalSecretsHelmChart(opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
 	CreateAlbIngressControllerHelmChart(opts CreateAlbIngressControllerHelmChartOpts) (*Helm, error)
 	CreateArgoCD(opts CreateArgoCDOpts) (*Helm, error)
+	CreateKubePrometheusStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
 }
 
 // HelmStore defines the storage layer
@@ -96,4 +109,5 @@ type HelmStore interface {
 	SaveExternalSecretsHelmChart(*Helm) error
 	SaveAlbIngressControllerHelmChar(*Helm) error
 	SaveArgoCD(*Helm) error
+	SaveKubePrometheusStack(*Helm) error
 }
