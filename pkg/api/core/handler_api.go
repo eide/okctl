@@ -23,6 +23,7 @@ type Endpoints struct {
 	CreateExternalSecretsPolicy              endpoint.Endpoint
 	CreateExternalSecretsServiceAccount      endpoint.Endpoint
 	CreateExternalSecretsHelmChart           endpoint.Endpoint
+	CreateKubePrometheusStackHelmChart       endpoint.Endpoint
 	CreateAlbIngressControllerServiceAccount endpoint.Endpoint
 	CreateAlbIngressControllerPolicy         endpoint.Endpoint
 	CreateAlbIngressControllerHelmChart      endpoint.Endpoint
@@ -59,6 +60,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateExternalSecretsPolicy:              makeCreateExternalSecretsPolicyEndpoint(s.ManagedPolicy),
 		CreateExternalSecretsServiceAccount:      makeCreateExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
 		CreateExternalSecretsHelmChart:           makeCreateExternalSecretsHelmChartEndpoint(s.Helm),
+		CreateKubePrometheusStackHelmChart:       makeCreateKubePrometheusStackHelmChartEndpoint(s.Helm),
 		CreateAlbIngressControllerServiceAccount: makeCreateAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAlbIngressControllerPolicy:         makeCreateAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
 		CreateAlbIngressControllerHelmChart:      makeCreateAlbIngressControllerHelmChartEndpoint(s.Helm),
@@ -94,6 +96,7 @@ type Handlers struct {
 	CreateExternalSecretsPolicy              http.Handler
 	CreateExternalSecretsServiceAccount      http.Handler
 	CreateExternalSecretsHelmChart           http.Handler
+	CreateKubePrometheusStackHelmChart       http.Handler
 	CreateAlbIngressControllerServiceAccount http.Handler
 	CreateAlbIngressControllerPolicy         http.Handler
 	CreateAlbIngressControllerHelmChart      http.Handler
@@ -156,6 +159,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateExternalSecretsPolicy:              newServer(endpoints.CreateExternalSecretsPolicy, decodeCreateExternalSecretsPolicyRequest),
 		CreateExternalSecretsServiceAccount:      newServer(endpoints.CreateExternalSecretsServiceAccount, decodeCreateExternalSecretsServiceAccount),
 		CreateExternalSecretsHelmChart:           newServer(endpoints.CreateExternalSecretsHelmChart, decodeCreateExternalSecretsHelmChart),
+		CreateKubePrometheusStackHelmChart:       newServer(endpoints.CreateKubePrometheusStackHelmChart, decodeCreateKubePrometheusStackHelmChart),
 		CreateAlbIngressControllerServiceAccount: newServer(endpoints.CreateAlbIngressControllerServiceAccount, decodeCreateAlbIngressControllerServiceAccount),
 		CreateAlbIngressControllerPolicy:         newServer(endpoints.CreateAlbIngressControllerPolicy, decodeCreateAlbIngressControllerPolicyRequest),
 		CreateAlbIngressControllerHelmChart:      newServer(endpoints.CreateAlbIngressControllerHelmChart, decodeCreateAlbIngressControllerHelmChart),
@@ -228,6 +232,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsHelmChart)
 			})
+			r.Route("/kubeprometheusstack", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateKubePrometheusStackHelmChart)
+			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
 			})
@@ -298,6 +305,7 @@ const (
 	vpcTag                  = "vpc"
 	managedPoliciesTag      = "managedPolicies"
 	externalSecretsTag      = "externalSecrets"
+	kubePrometheusStackTag  = "kubeprometheusstack"
 	serviceAccountsTag      = "serviceAccounts"
 	helmTag                 = "helm"
 	albIngressControllerTag = "albingresscontroller"
@@ -327,6 +335,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateExternalSecretsPolicy:              logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),
 			CreateExternalSecretsServiceAccount:      logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount),
 			CreateExternalSecretsHelmChart:           logmd.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),
+			CreateKubePrometheusStackHelmChart:       logmd.Logging(logger, strings.Join([]string{helmTag, kubePrometheusStackTag}, "/"), "create")(endpoints.CreateKubePrometheusStackHelmChart),
 			CreateAlbIngressControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount),
 			CreateAlbIngressControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),
 			CreateAlbIngressControllerHelmChart:      logmd.Logging(logger, strings.Join([]string{helmTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerHelmChart),
