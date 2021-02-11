@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -29,6 +30,8 @@ import (
 type applyClusterOpts struct {
 	AWSCredentialsType    string
 	GithubCredentialsType string
+
+	Quiet bool
 
 	File string
 
@@ -98,7 +101,14 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				ClusterName:  o.RepoStateWithEnv.GetClusterName(),
 			}
 
-			spin, err := spinner.New("synchronizing", o.Err)
+			var spinnerWriter io.Writer
+			if opts.Quiet {
+				spinnerWriter = ioutil.Discard
+			} else {
+				spinnerWriter = o.Err
+			}
+
+			spin, err := spinner.New("synchronizing", spinnerWriter)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
@@ -193,6 +203,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			context.GithubCredentialsTypeToken,
 		),
 	)
+	flags.BoolVarP(&opts.Quiet, "quiet", "q", false, "reduces output to screen")
 
 	cmd.Hidden = true
 
