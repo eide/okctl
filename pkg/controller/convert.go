@@ -98,7 +98,7 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 }
 
 // ApplyDesiredStateMetadata applies metadata from a cluster definition to the nodes
-func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha1.Cluster, repoDir string) error {
+func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha1.Cluster, repoDir string) (err error) {
 	primaryHostedZoneNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeZone})
 	if primaryHostedZoneNode == nil {
 		return errors.New("expected primary hosted zone node was not found")
@@ -121,9 +121,14 @@ func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha
 		return errors.New("expected github node was not found")
 	}
 
-	repo, err := git.GithubRepoFullName(cluster.Github.Organisation, repoDir)
-	if err != nil {
-		return fmt.Errorf("error fetching full git repo name: %w", err)
+	var repo string
+	if cluster.Github.Repository != "" {
+		repo = fmt.Sprintf("%s/%s", cluster.Github.Organisation, cluster.Github.Repository)
+	} else {
+		repo, err = git.GithubRepoFullName(cluster.Github.Organisation, repoDir)
+		if err != nil {
+			return fmt.Errorf("error fetching full git repo name: %w", err)
+		}
 	}
 
 	githubNode.Metadata = reconciler.GithubMetadata{
